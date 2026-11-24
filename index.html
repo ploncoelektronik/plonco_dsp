@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1219">
+<title>PL 2.4 DSP · Plonco Elektronik</title>
+<style>
+:root{
+  --bg:#0a0f15;--bg2:#0e151d;--panel:#121a23;--panel2:#18222e;--line:#243242;--line2:#2f4156;
+  --tx:#e8eef5;--dim:#8a9aad;--mute:#5d6e82;--acc:#22d3ee;--acc2:#3b82f6;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;
+  --r:12px;color-scheme:dark
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:radial-gradient(1200px 500px at 50% -200px,#10202e 0,transparent 70%),var(--bg)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:30;background:rgba(10,15,21,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hbar{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto;min-width:0}
+#logo{display:flex;flex:none;filter:drop-shadow(0 2px 6px rgba(34,211,238,.18))}
+.brand h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.4px;line-height:1.15;white-space:nowrap}
+.brand small{display:block;font-size:9.5px;letter-spacing:2.6px;color:var(--acc);font-weight:600;text-transform:uppercase;margin-top:1px}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--bg2);font-size:12px;color:var(--dim);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}.dot.demo{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.hbtns{display:flex;gap:8px}
+nav{max-width:1180px;margin:0 auto;padding:0 16px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav button{background:none;border:none;border-bottom:2px solid transparent;border-radius:0;padding:10px 16px;color:var(--dim);font-weight:600;letter-spacing:.2px;cursor:pointer;white-space:nowrap}
+nav button:hover{color:var(--tx)}
+nav button.sel{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* ---------- elemen dasar ---------- */
+button{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 13px;cursor:pointer;min-height:34px;transition:.12s}
+button:hover{border-color:var(--line2);background:#1d2937}
+button:active{transform:translateY(1px)}
+button.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#041a24;border:none;font-weight:700}
+button.pri:hover{filter:brightness(1.08)}
+button.bad{border-color:#5b2a2f;color:var(--bad)}button.bad:hover{background:#2a1519}
+button.on{background:rgba(34,211,238,.16);border-color:var(--acc);color:var(--acc);font-weight:600}
+button.mute.on{background:rgba(248,113,113,.18);border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.38;cursor:default;pointer-events:none}
+select,input[type=text],input[type=number]{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:6px 10px;min-height:34px}
+input[type=range]{width:100%;accent-color:var(--acc);height:26px;background:transparent}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.page{display:none}.page.sel{display:block}
+#warn{display:none;max-width:1148px;margin:12px auto 0;padding:10px 14px;border:1px solid #6b5412;background:#251d08;color:var(--warn);border-radius:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1}
+.dim{color:var(--dim)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim);font-weight:700;display:flex;align-items:center;gap:8px}
+.card h3 .sp{flex:1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.two>.card{margin-bottom:0}.two{margin-bottom:14px}
+.hint{font-size:12px;color:var(--mute);margin-top:8px}
+.danger{color:var(--bad)}
+.tag{font-size:11px;padding:2px 9px;border-radius:99px;background:var(--bg2);border:1px solid var(--line);color:var(--dim);font-weight:600}
+.tag.ok{color:var(--ok);border-color:#1f5a46}.tag.warn{color:var(--warn);border-color:#6b5412}
+.ctl{display:grid;grid-template-columns:104px 1fr 92px;gap:12px;align-items:center;margin:9px 0}
+.ctl label{color:var(--dim);font-size:13px}
+.ctl output{text-align:right;font-variant-numeric:tabular-nums;color:var(--acc);font-weight:600;font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chips button{padding:5px 12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:none;border-radius:0;background:var(--panel2)}.seg button+button{border-left:1px solid var(--line)}
+canvas.g{width:100%;height:240px;background:#080c11;border:1px solid var(--line);border-radius:10px;touch-action:none;display:block}
+canvas.g.sq{height:260px;max-width:300px}
+
+/* ---------- mixer: strip console ---------- */
+.console{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.cs{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:12px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.cs.out{border-top:2px solid var(--acc)}.cs.in{border-top:2px solid #a78bfa}
+.cs.muted .faderwrap{opacity:.45}
+.cs .nm{font-weight:800;letter-spacing:.6px;font-size:13px;text-align:center;line-height:1.1}
+.cs .nm small{display:block;font-size:10px;color:var(--dim);letter-spacing:1.2px;font-weight:600;margin-top:3px;min-height:12px}
+.faderwrap{display:flex;gap:5px;height:214px;align-items:stretch}
+.scale{display:flex;flex-direction:column;justify-content:space-between;font-size:9px;color:var(--mute);text-align:right;padding:4px 0;font-variant-numeric:tabular-nums;width:22px}
+.vm{width:12px;background:#070b10;border:1px solid var(--line);border-radius:4px;position:relative;overflow:hidden;margin:4px 0}
+.vm i{position:absolute;inset:0;background:linear-gradient(0deg,#16a34a 0 60%,#a3e635 60% 72%,var(--warn) 72% 88%,var(--bad) 88%);clip-path:inset(100% 0 0 0)}
+.vm b{position:absolute;left:0;right:0;height:2px;background:#fff;bottom:0;opacity:.9}
+.fader{width:34px;position:relative;cursor:ns-resize;touch-action:none;outline-offset:0}
+.rail{position:absolute;left:50%;top:12px;bottom:12px;width:5px;transform:translateX(-50%);background:#070b10;border:1px solid var(--line);border-radius:3px}
+.fz{position:absolute;left:3px;right:3px;height:1px;background:var(--mute);transform:translateY(-.5px)}
+.fk{position:absolute;left:1px;right:1px;height:22px;transform:translateY(-50%);border-radius:5px;background:linear-gradient(180deg,#3a4a5e,#222e3c);border:1px solid #4b5f78;box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.fk::after{content:"";position:absolute;left:5px;right:5px;top:50%;height:2px;background:var(--acc);transform:translateY(-50%);border-radius:1px}
+.fader:focus-visible .fk{border-color:var(--acc)}
+.cs output{font-variant-numeric:tabular-nums;font-weight:700;color:var(--acc);font-size:13px}
+.cs .btn2{display:flex;gap:5px;width:100%}.cs .btn2 button{flex:1;padding:6px 0}
+.cs .edit{width:100%;font-size:12px;color:var(--dim)}
+.cs .gr{font-size:10px;color:var(--warn);min-height:13px;font-weight:700;letter-spacing:.4px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+
+/* ---------- preset ---------- */
+.pre{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pslot{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.pslot .t{font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;gap:6px}
+.lnk{display:inline-flex;gap:6px;align-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:3px 6px 3px 11px;margin:3px 4px 3px 0}
+.lnk button{min-height:22px;padding:0 7px;border-radius:99px}
+
+/* ---------- editor gambar ---------- */
+.imged{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:16px;align-items:start}
+.imgprev{width:100%;max-width:340px;aspect-ratio:160/128;image-rendering:pixelated;border:1px solid var(--line2);border-radius:8px;background:#000;cursor:grab;touch-action:none;display:block;box-shadow:0 0 0 5px #05080c,0 0 0 6px var(--line)}
+.imgprev.drop{outline:2px dashed var(--acc);outline-offset:4px}
+.imgprev.nopan{cursor:default}
+.prog{height:8px;background:var(--bg2);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:6px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .12s}
+.sw{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:13px;cursor:pointer}
+.sw input{accent-color:var(--acc);width:16px;height:16px}
+
+footer{max-width:1180px;margin:8px auto 0;padding:0 16px 28px;color:var(--mute);font-size:12px;display:flex;align-items:center;gap:8px;justify-content:center}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);background:#0f1822;border:1px solid var(--line2);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.22s;z-index:99;max-width:90vw;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#toast.show{opacity:1;transform:translate(-50%,0)}#toast.err{border-color:#7a2f35;color:#ffb4b4}#toast.ok{border-color:#1f6a50}
+
+@media(max-width:860px){
+  .two{grid-template-columns:1fr}.two>.card{margin-bottom:14px}.two{margin-bottom:0}
+  .console{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .imged{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .ctl{grid-template-columns:80px 1fr 74px;gap:8px}
+  .hbar{padding:8px 12px}.brand small{letter-spacing:1.8px}
+  main{padding:12px}
+  .faderwrap{height:190px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <div class="brand">
+      <span id="logo" aria-label="Plonco Elektronik"></span>
+      <div><h1>PL 2.4 DSP</h1><small>Plonco Elektronik</small></div>
+    </div>
+    <span class="pill"><span id="dot" class="dot"></span><span id="stat">Belum terhubung</span></span>
+    <div class="hbtns">
+      <button id="bConn" class="pri">Sambungkan</button>
+      <button id="bSync" disabled title="Ambil ulang semua nilai dari alat">Sinkron</button>
+      <button id="bDemo" title="Coba tampilan tanpa perangkat">Demo</button>
+      <button id="bAll" style="display:none" title="Tampilkan semua perangkat BLE di sekitar, bukan hanya PL2.4-DSP">Semua perangkat</button>
+    </div>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+<div id="warn"></div>
+<main>
+  <section class="page" id="pg-mix"></section>
+  <section class="page" id="pg-ch"></section>
+  <section class="page" id="pg-pre"></section>
+  <section class="page" id="pg-sys"></section>
+</main>
+<footer><span id="flogo"></span>PL 2.4 DSP Remote · Plonco Elektronik</footer>
+<div id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+/* ====================== KONSTANTA ====================== */
+const SVC = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const RXU = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const TXU = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const FS = 48000;
+const CHN = ['IN A','IN B','OUT 1','OUT 2','OUT 3','OUT 4'];
+const SPK = ['SUB','LOW','MID','HI'];
+const EQ_NAMES = ['Off','Peak','LowShelf','HighShelf','LowPass','HighPass','Notch','BandPass','AllPass'];
+const XO_NAMES = ['Off','Butterworth 12','Butterworth 18','Butterworth 24','Butterworth 48','Linkwitz-Riley 12','Linkwitz-Riley 24','Linkwitz-Riley 48','Bessel 12','Bessel 18','Bessel 24','Bessel 48'];
+const TONE_NAMES = ['OFF','Sine','Pink noise'];
+const THEMES = ['Cyan','Amber','Emerald','Violet','Crimson','Ice','Mono'];
+const EQ_F0 = [31.5,63,125,250,500,1000,2000,4000,8000,16000];
+const $ = (s, r = document) => r.querySelector(s);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const el = (tag, attrs, ...kids) => {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k]);
+  }
+  for (const c of kids.flat()) if (c != null) e.append(c.nodeType ? c : document.createTextNode(c));
+  return e;
+};
+
+/* ====================== LOGO PLONCO ELEKTRONIK ====================== */
+const iconBody = id => `<defs><linearGradient id="pbg${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13293b"/><stop offset="1" stop-color="#08121b"/></linearGradient>
+<linearGradient id="pac${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eead4"/><stop offset=".55" stop-color="#22d3ee"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>
+<rect x="2" y="2" width="60" height="60" rx="15" fill="url(#pbg${id})" stroke="#1d3a52" stroke-width="1.5"/>
+<path d="M21 46V18H34a10 10 0 0 1 0 20H21" fill="none" stroke="url(#pac${id})" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26.5 28q2-6 4 0t4 0t4 0" fill="none" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M21 51.5H44" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round" opacity=".55"/><circle cx="21" cy="51.5" r="2.2" fill="#22d3ee"/><circle cx="46.5" cy="51.5" r="2.2" fill="#fbbf24"/>`;
+const iconSvg = (id, size) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}">${iconBody(id)}</svg>`;
+/* logo penuh untuk layar TFT 160x128 (ikon + wordmark), dipakai sebagai gambar boot bawaan Plonco */
+const tftLogoSvg = () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 128" width="160" height="128">
+<rect width="160" height="128" fill="#0a1118"/><rect width="160" height="3" fill="#22d3ee"/>
+<g transform="translate(52 9) scale(.875)">${iconBody('t')}</g>
+<g font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" text-anchor="middle">
+<text x="81" y="86" font-size="17" font-weight="800" letter-spacing="2.4" fill="#f1f5f9">PLONCO</text>
+<text x="81.5" y="98.5" font-size="7.4" font-weight="700" letter-spacing="4.1" fill="#22d3ee">ELEKTRONIK</text>
+<text x="80" y="111" font-size="6.4" font-weight="500" letter-spacing=".6" fill="#8a9aad">DSP 2 IN / 4 OUT  ·  PL 2.4</text></g></svg>`;
+$('#logo').innerHTML = iconSvg('h', 34);
+$('#flogo').innerHTML = iconSvg('f', 16);
+{ const l = document.createElement('link'); l.rel = 'icon'; l.href = 'data:image/svg+xml,' + encodeURIComponent(iconSvg('i', 64)); document.head.append(l); }
+
+/* ====================== STATE ====================== */
+const ST = [{}, {}, {}, {}, {}, {}];
+const meta = { link: [0,0,0,0,0,0], tone: [0,1000,-30], theme: 0, autoSave: 1, bl: [100, 15], names: ['','','','','',''],
+  presets: Array.from({length:5}, () => ({used:0, name:''})),
+  ui: { b: 18, h: 30, s: 120, p: 1, t: 1, f: 15 }, img: [null, null], fs: 1 };
+const lev = new Array(6).fill(-90), hold = new Array(6).fill(-90), holdT = new Array(6).fill(0), gr = [0,0,0,0];
+let connected = false, demo = false, curTab = 'mix', curCh = 2, curPage = {0:'gain',1:'gain'}, curBand = 0;
+const bindings = new Map(), touched = new Map();
+const v = (ch, k, d = 0) => (ST[ch][k] !== undefined ? ST[ch][k] : d);
+const tagOf = i => meta.names[i] || (i >= 2 ? SPK[i - 2] : '');
+const isOut = ch => ch >= 2;
+
+function toast(msg, kind = '') {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show ' + kind;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.className = ''; }, 3200);
+}
+
+/* ====================== TRANSPORT BLE ====================== */
+let dev = null, rxC = null, txC = null, wq = Promise.resolve(), rbuf = '', retry = 0, wchunk = 20, mtuVal = 0;
+const diag = { tx: 0, rx: 0, lines: 0, last: '-', rtt: null, pingT: 0, mtu: 0, fsTotal: 0, fsUsed: 0, ie: '', fw: '?', rs: '?', hp: '? (tekan Tes ping)', au: '? (tekan Tes ping)', upinfo: '-', up: 0 };
+const dec = new TextDecoder(), enc = new TextEncoder();
+
+function setStatus(txt, mode) {
+  $('#stat').textContent = txt;
+  $('#dot').className = 'dot' + (mode ? ' ' + mode : '');
+  $('#bSync').disabled = !(connected || demo);
+  $('#bConn').textContent = connected ? 'Putuskan' : 'Sambungkan';
+  $('#bDemo').textContent = demo ? 'Keluar demo' : 'Demo';
+}
+let upGen = 0;
+function sendRaw(line, reliable = false, gen = null) {
+  if (demo) { demoHandle(line); return; }
+  if (!connected || !rxC) return;
+  const data = enc.encode(line + '\n'); diag.tx += data.length;
+  wq = wq.then(async () => {
+    if (gen !== null && gen !== upGen) return;   // blok lama yang sudah diganti pengiriman ulang: lewati
+    for (let i = 0; i < data.length; i += wchunk) {
+      const part = data.slice(i, i + wchunk);
+      // ulangi bila Android menolak sesaat ("GATT operation already in progress"); jangan buang sisa baris
+      for (let t = 0; ; t++) {
+        try { if (reliable && rxC.writeValueWithResponse) await rxC.writeValueWithResponse(part); else if (rxC.writeValueWithoutResponse) await rxC.writeValueWithoutResponse(part); else await rxC.writeValue(part); break; }
+        catch (e) { if (t >= 6 || !rxC) throw e; await new Promise(r => setTimeout(r, 15 * (t + 1))); }
+      }
+    }
+  }).catch(e => console.warn('tulis gagal', e));
+}
+const pending = new Map(); let flushT = 0;
+function setParam(ch, key, val) {
+  ST[ch][key] = val; touched.set(ch + ':' + key, performance.now()); pending.set(ch + ':' + key, val);
+  if (!flushT) flushT = setTimeout(flush, 40);
+  scheduleDraw(); if (curTab === 'mix') updateStripVals();
+}
+function flush() {
+  flushT = 0;
+  for (const [k, val] of pending) { const [ch, key] = k.split(':'); sendRaw(`S,${ch},${key},${Number.isInteger(val) ? val : +val.toFixed(3)}`); }
+  pending.clear();
+}
+const cmd = s => sendRaw(s);
+
+async function connectBle(all = false) {
+  if (!navigator.bluetooth) return;
+  try {
+    setStatus('Mencari perangkat…');
+    dev = await navigator.bluetooth.requestDevice(all ? { acceptAllDevices: true, optionalServices: [SVC] } : { filters: [{ namePrefix: 'PL2.4' }, { services: [SVC] }], optionalServices: [SVC] });
+    dev.addEventListener('gattserverdisconnected', onDisc);
+    await openGatt();
+  } catch (e) { console.warn(e); setStatus(e.name === 'NotFoundError' ? 'Tidak ada perangkat dipilih' : 'Gagal: ' + e.message);
+    $('#bAll').style.display = ''; if (e.name === 'NotFoundError') toast('Alat tidak ketemu? Coba tombol “Semua perangkat” di atas.', 'err'); }
+}
+async function openGatt() {
+  setStatus('Menyambung…');
+  const srv = await dev.gatt.connect();
+  const svc = await srv.getPrimaryService(SVC);
+  rxC = await svc.getCharacteristic(RXU); txC = await svc.getCharacteristic(TXU);
+  txC.addEventListener('characteristicvaluechanged', ev => feed(dec.decode(ev.target.value, { stream: true })));
+  await txC.startNotifications();
+  connected = true; retry = 0; rbuf = ''; wchunk = 20;
+  setStatus('Terhubung · ' + dev.name, 'on');
+  sendRaw('GET'); sendRaw('MET,1');
+}
+function onDisc() {
+  if (uploading && !up.err) up.err = 'disc';
+  connected = false; rxC = txC = null; setStatus('Terputus');
+  if (retry < 3 && dev) { retry++; setTimeout(() => dev && !connected && openGatt().catch(() => onDisc()), 1500); }
+}
+function disconnectBle() { retry = 99; if (dev && dev.gatt.connected) dev.gatt.disconnect(); connected = false; setStatus('Terputus'); }
+function feed(s) { diag.rx += s.length; rbuf += s; let i; while ((i = rbuf.indexOf('\n')) >= 0) { const l = rbuf.slice(0, i).trim(); rbuf = rbuf.slice(i + 1); if (l) parseLine(l); } }
+
+/* ====================== PARSER PESAN ESP32 ====================== */
+const up = { acked: 0, err: null, done: false };
+function parseLine(l) {
+  const f = l.split(','), c = f[0]; diag.lines++; if (c !== 'M') diag.last = l.slice(0, 48);
+  if (c === 'P') {
+    const ch = +f[1], key = f[2], val = parseFloat(f[3]);
+    if (!(ch >= 0 && ch < 6)) return;
+    ST[ch][key] = val;
+    const b = bindings.get(ch + ':' + key), t = touched.get(ch + ':' + key) || 0;
+    if (b && performance.now() - t > 600) b.forEach(fn => fn(val));
+    scheduleDraw(); if (curTab === 'mix') updateStripVals();
+  } else if (c === 'M') {
+    for (let i = 0; i < 6; i++) lev[i] = +f[1 + i];
+    for (let i = 0; i < 4; i++) gr[i] = +f[7 + i];
+  } else if (c === 'L') { for (let i = 0; i < 6; i++) meta.link[i] = +f[1 + i]; metaChanged(); }
+  else if (c === 'TN') { meta.tone = [+f[1], +f[2], +f[3]]; metaChanged(); }
+  else if (c === 'TH') { meta.theme = +f[1]; metaChanged(); }
+  else if (c === 'AS') { meta.autoSave = +f[1]; metaChanged(); }
+  else if (c === 'BL') { meta.bl = [+f[1], +f[2]]; metaChanged(); }
+  else if (c === 'NM') { meta.names[+f[1]] = f.slice(2).join(','); metaChanged(); }
+  else if (c === 'PS') { meta.presets[+f[1]] = { used: +f[2], name: f.slice(3).join(',') }; metaChanged(); }
+  else if (c === 'UI') { meta.ui = { b: +f[1], h: +f[2], s: +f[3], p: +f[4], t: +f[5], f: f[6] !== undefined ? +f[6] : 15 }; timerCard.sync(); }
+  else if (c === 'IS') { meta.img = [+f[1], +f[2]]; meta.fs = +f[3]; if (f.length > 5) diag.fsTotal = +f[4], diag.fsUsed = +f[5]; imgEd.forEach(e => e.badge()); }
+  else if (c === 'HELLO') diag.fw = f[2] || '?';
+  else if (c === 'RS') diag.rs = f[1] + ' · aktif ' + f[2] + ' dtk';
+  else if (c === 'IA') { const v = +f[1]; if (v === up.acked && v > 0) up.dup = (up.dup || 0) + 1; up.acked = v; }
+  else if (c === 'IOK') up.done = true;
+  else if (c === 'IE') { if (!up.err) up.err = f[1]; diag.ie = (diag.ie || '') + f[1] + ' '; }   // simpan error PERTAMA (yang berikutnya hanya akibat)
+  else if (c === 'MTU') { mtuVal = +f[1]; diag.mtu = mtuVal; }
+  else if (c === 'PONG') { diag.rtt = Math.round(performance.now() - diag.pingT); if (f[1]) diag.mtu = +f[1]; if (f.length > 4) diag.hp = `bebas ${(f[2] / 1024).toFixed(0)} KB · blok terbesar ${(f[3] / 1024).toFixed(0)} KB · PSRAM ${(f[4] / 1024).toFixed(0)} KB`; if (f.length > 8) diag.au = `proses ${f[5]} µs · selang ${f[6]} µs · terlambat ${f[7]}× · updateAll ${f[8]} µs` + (f.length > 11 ? ` · henti >8 ms ${f[9]}× · simpan flash ${f[10]}× (terlama ${f[11]} ms)` : ''); }
+}
+let metaT = 0;
+function metaChanged() {
+  if (metaT) return;
+  metaT = setTimeout(() => {
+    metaT = 0;
+    if (curTab === 'sys') { const a = document.activeElement; if (a && $('#pg-sys').contains(a) && ['INPUT', 'SELECT'].includes(a.tagName)) { metaChanged(); return; } }
+    if (curTab === 'mix') renderMixer(); else if (curTab === 'pre') renderPresets(); else if (curTab === 'sys') renderSystem(); else if (curTab === 'ch') renderChanHeader();
+  }, 150);
+}
+
+/* ====================== MATEMATIKA FILTER (cermin firmware) ====================== */
+function bqDesign(type, f, g, Q) {
+  f = clamp(f, 10, FS * 0.45); if (Q < 0.05) Q = 0.05;
+  const w0 = 2 * Math.PI * f / FS, cw = Math.cos(w0), sw = Math.sin(w0), al = sw / (2 * Q);
+  const A = Math.pow(10, g / 40), s = 2 * Math.sqrt(A) * al;
+  let b0 = 1, b1 = 0, b2 = 0, a0 = 1, a1 = 0, a2 = 0;
+  switch (type) {
+    case 1: b0 = 1 + al * A; b1 = -2 * cw; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * cw; a2 = 1 - al / A; break;
+    case 2: b0 = A * ((A + 1) - (A - 1) * cw + s); b1 = 2 * A * ((A - 1) - (A + 1) * cw); b2 = A * ((A + 1) - (A - 1) * cw - s);
+            a0 = (A + 1) + (A - 1) * cw + s; a1 = -2 * ((A - 1) + (A + 1) * cw); a2 = (A + 1) + (A - 1) * cw - s; break;
+    case 3: b0 = A * ((A + 1) + (A - 1) * cw + s); b1 = -2 * A * ((A - 1) + (A + 1) * cw); b2 = A * ((A + 1) + (A - 1) * cw - s);
+            a0 = (A + 1) - (A - 1) * cw + s; a1 = 2 * ((A - 1) - (A + 1) * cw); a2 = (A + 1) - (A - 1) * cw - s; break;
+    case 4: b0 = (1 - cw) / 2; b1 = 1 - cw; b2 = (1 - cw) / 2; a0 = 1 + al; a1 = -2 * cw; a2 = 1 - al; break;
+    case 5: b0 = (1 + cw) / 2; b1 = -(1 + cw); b2 = (1 + cw) / 2; a0 = 1 + al; a1 = -2 * cw; a2 = 1 - al; break;
+    case 6: b0 = 1; b1 = -2 * cw; b2 = 1; a0 = 1 + al; a1 = -2 * cw; a2 = 1 - al; break;
+    case 7: b0 = al; b1 = 0; b2 = -al; a0 = 1 + al; a1 = -2 * cw; a2 = 1 - al; break;
+    case 8: b0 = 1 - al; b1 = -2 * cw; b2 = 1 + al; a0 = 1 + al; a1 = -2 * cw; a2 = 1 - al; break;
+  }
+  return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+}
+function bqFirst(hp, f) {
+  f = clamp(f, 10, FS * 0.45);
+  const K = Math.tan(Math.PI * f / FS), n = 1 / (1 + K);
+  return hp ? [n, -n, 0, (K - 1) * n, 0] : [K * n, K * n, 0, (K - 1) * n, 0];
+}
+function bqDb(c, f) {
+  const w = 2 * Math.PI * f / FS, c1 = Math.cos(w), s1 = Math.sin(w), c2 = Math.cos(2 * w), s2 = Math.sin(2 * w);
+  const nr = c[0] + c[1] * c1 + c[2] * c2, ni = -(c[1] * s1 + c[2] * s2), dr = 1 + c[3] * c1 + c[4] * c2, di = -(c[3] * s1 + c[4] * s2);
+  return 10 * Math.log10((nr * nr + ni * ni) / (dr * dr + di * di) + 1e-30);
+}
+function butterSect(n) {
+  const o = []; for (let k = 1; k <= Math.floor(n / 2); k++) o.push({ Q: 1 / (2 * Math.cos((2 * k - 1) * Math.PI / (2 * n))), fr: 1, first: 0 });
+  if (n & 1) o.push({ Q: 0, fr: 1, first: 1 }); return o;
+}
+function computeBessel(n) {
+  const fact = k => { let r = 1; for (let i = 2; i <= k; i++) r *= i; return r; };
+  const c = []; for (let k = 0; k <= n; k++) c[k] = fact(2 * n - k) / (Math.pow(2, n - k) * fact(k) * fact(n - k));
+  const mul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]], sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+  const div = (a, b) => { const d = b[0] * b[0] + b[1] * b[1]; return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d]; };
+  const r = []; let z = [1, 0]; for (let i = 0; i < n; i++) { r.push(z); z = mul(z, [0.4, 0.9]); }
+  for (let it = 0; it < 500; it++) for (let i = 0; i < n; i++) {
+    const x = r[i]; let p = [c[n], 0]; for (let k = n - 1; k >= 0; k--) { p = mul(p, x); p[0] += c[k]; }
+    let d = [1, 0]; for (let j = 0; j < n; j++) if (j !== i) d = mul(d, sub(x, r[j])); r[i] = sub(x, div(p, d));
+  }
+  let lo = 0.1, hi = 20;
+  for (let it = 0; it < 100; it++) { const mid = (lo + hi) / 2; let p = [c[n], 0]; for (let k = n - 1; k >= 0; k--) { p = mul(p, [0, mid]); p[0] += c[k]; }
+    if (c[0] * c[0] / (p[0] * p[0] + p[1] * p[1]) > 0.5) lo = mid; else hi = mid; }
+  const out = [];
+  for (let i = 0; i < n; i++) { const p = [r[i][0] / lo, r[i][1] / lo], ab = Math.hypot(p[0], p[1]);
+    if (Math.abs(p[1]) > 1e-6) { if (p[1] > 0) out.push({ Q: ab / (2 * -p[0]), fr: ab, first: 0 }); } else out.push({ Q: 0, fr: Math.abs(p[0]), first: 1 }); }
+  return out;
+}
+const BES = [2, 3, 4, 8].map(computeBessel);
+function xoSections(t) {
+  switch (t) {
+    case 1: return butterSect(2); case 2: return butterSect(3); case 3: return butterSect(4); case 4: return butterSect(8);
+    case 5: return [{ Q: 0.5, fr: 1, first: 0 }]; case 6: return butterSect(2).concat(butterSect(2)); case 7: return butterSect(4).concat(butterSect(4));
+    case 8: return BES[0]; case 9: return BES[1]; case 10: return BES[2]; case 11: return BES[3]; default: return [];
+  }
+}
+function xoDb(t, f, hp, x) { let s = 0; for (const sc of xoSections(t)) s += bqDb(sc.first ? bqFirst(hp, f * sc.fr) : bqDesign(hp ? 5 : 4, f * sc.fr, 0, sc.Q), x); return s; }
+function eqBands(ch) { const a = []; for (let b = 0; b < 10; b++) a.push({ t: v(ch, `e${b}t`, 1), f: v(ch, `e${b}f`, EQ_F0[b]), g: v(ch, `e${b}g`, 0), q: v(ch, `e${b}q`, 1.4) }); return a; }
+const hasGain = t => t === 1 || t === 2 || t === 3;
+function eqDb(bands, x) { let s = 0; for (const b of bands) { if (b.t === 0 || (hasGain(b.t) && Math.abs(b.g) < 0.01)) continue; s += bqDb(bqDesign(b.t, b.f, b.g, b.q), x); } return s; }
+
+/* ====================== FORMAT & SKALA ====================== */
+const fmtHz = f => f >= 1000 ? (f / 1000).toFixed(f >= 10000 ? 1 : 2) + ' kHz' : Math.round(f) + ' Hz';
+const fmtDb = (x, d = 1) => (x > 0 ? '+' : '') + x.toFixed(d) + ' dB';
+const lin = (min, max, step, fmt) => ({ min, max, step, to: x => x, from: x => x, fmt });
+const freqScale = { min: 0, max: 1000, step: 1, to: p => { const f = 20 * Math.pow(10, 3 * p / 1000); return f < 100 ? Math.round(f * 2) / 2 : f < 1000 ? Math.round(f) : f < 10000 ? Math.round(f / 5) * 5 : Math.round(f / 25) * 25; },
+  from: f => 1000 * Math.log10(clamp(f, 20, 20000) / 20) / 3, fmt: fmtHz };
+const delayScale = { min: 0, max: 100, step: 0.02, to: ms => Math.round(ms * FS / 1000), from: s => s * 1000 / FS, fmt: s => (s * 1000 / FS).toFixed(2) + ' ms' };
+const fmtDur = s => s === 0 ? 'Tidak pernah' : s < 60 ? s + ' dtk' : s % 60 === 0 ? (s / 60) + ' mnt' : Math.floor(s / 60) + ' mnt ' + (s % 60) + ' dtk';
+
+/* ====================== WIDGET KONTROL ====================== */
+function bind(ch, key, fn) { const k = ch + ':' + key; if (!bindings.has(k)) bindings.set(k, []); bindings.get(k).push(fn); }
+function ctlSlider(ch, key, label, sc, def = 0) {
+  const out = el('output'), inp = el('input', { type: 'range', min: sc.min, max: sc.max, step: sc.step, 'aria-label': label });
+  const upd = val => { inp.value = sc.from(val); out.textContent = sc.fmt(val); };
+  inp.addEventListener('input', () => { const val = sc.to(+inp.value); out.textContent = sc.fmt(val); setParam(ch, key, val); });
+  inp.addEventListener('dblclick', () => { setParam(ch, key, def); upd(def); });
+  bind(ch, key, upd); upd(v(ch, key, def));
+  return el('div', { class: 'ctl' }, el('label', null, label), inp, out);
+}
+function ctlToggle(ch, key, label, onTxt = 'ON', offTxt = 'OFF', cls = '') {
+  const b = el('button', { class: cls });
+  const upd = val => { b.classList.toggle('on', !!val); b.textContent = val ? onTxt : offTxt; };
+  b.addEventListener('click', () => { const nv = v(ch, key) ? 0 : 1; setParam(ch, key, nv); upd(nv); });
+  bind(ch, key, upd); upd(v(ch, key));
+  return el('div', { class: 'ctl' }, el('label', null, label), el('div', null, b), el('span'));
+}
+function ctlSelect(ch, key, label, names) {
+  const s = el('select', null, names.map((n, i) => el('option', { value: i }, n)));
+  s.addEventListener('change', () => setParam(ch, key, +s.value));
+  bind(ch, key, val => { s.value = val; }); s.value = v(ch, key);
+  return el('div', { class: 'ctl' }, el('label', null, label), s, el('span'));
+}
+const card = (title, ...k) => el('div', { class: 'card' }, title ? el('h3', null, title) : null, ...k);
+
+/* ====================== GRAFIK ====================== */
+const drawers = []; let drawQ = 0;
+function scheduleDraw() { if (!drawQ) drawQ = requestAnimationFrame(() => { drawQ = 0; drawers.forEach(fn => fn()); }); }
+function prepCanvas(c) {
+  const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return { g, w, h };
+}
+const fx = (f, w) => (Math.log10(f / 20) / 3) * w, xf = (x, w) => 20 * Math.pow(10, 3 * x / w);
+function gridFreq(g, w, h, yLines, yFn, yLabel) {
+  g.strokeStyle = '#1a2531'; g.fillStyle = '#5d6e82'; g.font = '10px system-ui'; g.lineWidth = 1;
+  for (const f of [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]) { const x = Math.round(fx(f, w)) + .5; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke();
+    if ([100, 1000, 10000].includes(f)) g.fillText(f >= 1000 ? f / 1000 + 'k' : f, x + 3, h - 4); }
+  for (const d of yLines) { const y = Math.round(yFn(d)) + .5; g.strokeStyle = d === 0 ? '#2f4156' : '#1a2531'; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); g.fillText(yLabel(d), 3, y - 3); }
+}
+function eqGraph(ch) {
+  const c = el('canvas', { class: 'g' }), RANGE = 24, yOf = (d, h) => h / 2 - (d / RANGE) * (h / 2 - 6);
+  const draw = () => {
+    if (!c.isConnected) return;
+    const { g, w, h } = prepCanvas(c), bands = eqBands(ch), on = v(ch, 'eqOn');
+    gridFreq(g, w, h, [-18, -12, -6, 0, 6, 12, 18], d => yOf(d, h), d => (d > 0 ? '+' : '') + d);
+    const grad = g.createLinearGradient(0, 0, w, 0); grad.addColorStop(0, on ? '#22d3ee' : '#4b5b6b'); grad.addColorStop(1, on ? '#3b82f6' : '#4b5b6b');
+    g.beginPath(); for (let x = 0; x <= w; x += 2) { const y = yOf(clamp(eqDb(bands, xf(x, w)), -RANGE, RANGE), h); x ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.lineWidth = 2.2; g.strokeStyle = grad; g.stroke();
+    bands.forEach((b, i) => { if (b.t === 0) return;
+      const x = fx(clamp(b.f, 20, 20000), w), y = yOf(hasGain(b.t) ? clamp(b.g, -RANGE, RANGE) : 0, h);
+      g.beginPath(); g.arc(x, y, i === curBand ? 8 : 6, 0, 7); g.fillStyle = i === curBand ? '#fbbf24' : (on ? '#0e3a44' : '#222c36'); g.fill();
+      g.lineWidth = 1.5; g.strokeStyle = i === curBand ? '#fbbf24' : '#22d3ee'; g.stroke();
+      g.fillStyle = i === curBand ? '#2a1e02' : '#cfe9ee'; g.font = 'bold 9px system-ui'; g.textAlign = 'center'; g.fillText(i + 1, x, y + 3); g.textAlign = 'left'; });
+  };
+  let drag = -1; const pos = ev => { const r = c.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top, r.width, r.height]; };
+  c.addEventListener('pointerdown', ev => {
+    const [x, y, w, h] = pos(ev), bands = eqBands(ch); let best = -1, bd = 22;
+    bands.forEach((b, i) => { if (b.t === 0) return; const d = Math.hypot(fx(clamp(b.f, 20, 20000), w) - x, yOf(hasGain(b.t) ? clamp(b.g, -RANGE, RANGE) : 0, h) - y); if (d < bd) { bd = d; best = i; } });
+    if (best >= 0) { drag = best; curBand = best; c.setPointerCapture(ev.pointerId); renderEqBand(); scheduleDraw(); } });
+  c.addEventListener('pointermove', ev => {
+    if (drag < 0) return; const [x, y, w, h] = pos(ev), b = eqBands(ch)[drag];
+    let f = xf(clamp(x, 0, w), w); f = f < 100 ? Math.round(f) : f < 1000 ? Math.round(f / 5) * 5 : f < 10000 ? Math.round(f / 50) * 50 : Math.round(f / 250) * 250;
+    setParam(ch, `e${drag}f`, clamp(f, 20, 20000));
+    if (hasGain(b.t)) setParam(ch, `e${drag}g`, clamp(Math.round((((h / 2 - y) / (h / 2 - 6)) * RANGE) * 2) / 2, -20, 20));
+    refreshEqBand(); });
+  const up_ = () => { drag = -1; }; c.addEventListener('pointerup', up_); c.addEventListener('pointercancel', up_);
+  drawers.push(draw); return c;
+}
+function xoGraph(ch) {
+  const c = el('canvas', { class: 'g' }), yOf = (d, h) => 8 + (6 - d) / 54 * (h - 24);
+  drawers.push(() => {
+    if (!c.isConnected) return; const { g, w, h } = prepCanvas(c);
+    const hT = v(ch, 'hpT'), hF = v(ch, 'hpF', 80), lT = v(ch, 'lpT'), lF = v(ch, 'lpF', 2000);
+    gridFreq(g, w, h, [0, -6, -12, -24, -36, -48], d => yOf(d, h), d => d);
+    g.beginPath(); for (let x = 0; x <= w; x += 2) { const f = xf(x, w); let d = 0; if (hT) d += xoDb(hT, hF, true, f); if (lT) d += xoDb(lT, lF, false, f);
+      const y = yOf(clamp(d, -48, 6), h); x ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.lineWidth = 2.2; g.strokeStyle = '#22d3ee'; g.stroke(); g.setLineDash([4, 4]); g.strokeStyle = '#fbbf24';
+    for (const [t, f] of [[hT, hF], [lT, lF]]) if (t) { const x = fx(f, w); g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } g.setLineDash([]);
+  }); return c;
+}
+function compGraph(ch) {
+  const c = el('canvas', { class: 'g sq' });
+  drawers.push(() => {
+    if (!c.isConnected) return; const { g, w, h } = prepCanvas(c), thr = v(ch, 'cThr', -20), r = v(ch, 'cRat', 3), mk = v(ch, 'cMk', 0), on = v(ch, 'cOn');
+    const X = d => 20 + (d + 60) / 60 * (w - 30), Y = d => h - 20 - (d + 60) / 60 * (h - 30);
+    g.strokeStyle = '#1a2531'; g.fillStyle = '#5d6e82'; g.font = '10px system-ui';
+    for (let d = -60; d <= 0; d += 20) { g.beginPath(); g.moveTo(X(d), 10); g.lineTo(X(d), h - 20); g.stroke(); g.beginPath(); g.moveTo(20, Y(d)); g.lineTo(w - 10, Y(d)); g.stroke(); g.fillText(d, X(d) - 8, h - 6); }
+    g.setLineDash([3, 4]); g.beginPath(); g.moveTo(X(-60), Y(-60)); g.lineTo(X(0), Y(0)); g.stroke(); g.setLineDash([]);
+    g.beginPath(); for (let d = -60; d <= 0; d++) { let o = on ? (d <= thr ? d : thr + (d - thr) / Math.max(r, 1)) + mk : d; o = clamp(o, -60, 6); d === -60 ? g.moveTo(X(d), Y(o)) : g.lineTo(X(d), Y(o)); }
+    g.lineWidth = 2.2; g.strokeStyle = on ? '#22d3ee' : '#4b5b6b'; g.stroke();
+  }); return c;
+}
+
+/* ====================== HALAMAN KANAL ====================== */
+const PAGES_IN = [['gain', 'Gain'], ['eq', 'EQ'], ['gate', 'Gate'], ['comp', 'Comp'], ['delay', 'Delay']];
+const PAGES_OUT = [['gain', 'Source/Gain'], ['xo', 'Crossover'], ['eq', 'EQ'], ['delay', 'Delay'], ['lim', 'Limiter'], ['gate', 'Gate'], ['route', 'Route']];
+function renderChannel() {
+  const root = $('#pg-ch'); root.replaceChildren(); drawers.length = 0; bindings.clear();
+  root.append(el('div', { class: 'chips', id: 'chChips' }), el('div', { id: 'chHead' }), el('div', { class: 'chips', id: 'chPages' }), el('div', { id: 'chBody' }));
+  renderChanHeader(); renderChanPage();
+}
+function renderChanHeader() {
+  const chips = $('#chChips'); if (!chips) return;
+  chips.replaceChildren(...CHN.map((n, i) => el('button', { class: i === curCh ? 'on' : '', onclick: () => { curCh = i; renderChannel(); } }, n + (tagOf(i) ? ' · ' + tagOf(i) : ''))));
+  const pages = isOut(curCh) ? PAGES_OUT : PAGES_IN;
+  if (!pages.some(p => p[0] === curPage[+isOut(curCh)])) curPage[+isOut(curCh)] = 'gain';
+  $('#chPages').replaceChildren(...pages.map(([k, n]) => el('button', { class: k === curPage[+isOut(curCh)] ? 'on' : '', onclick: () => { curPage[+isOut(curCh)] = k; renderChannel(); } }, n)));
+  const lk = []; for (let d = 0; d < 6; d++) if ((meta.link[curCh] >> d) & 1) lk.push(CHN[d]);
+  const srcs = []; for (let s = 0; s < 6; s++) if ((meta.link[s] >> curCh) & 1) srcs.push(CHN[s]);
+  const msg = curCh < 2 ? [lk.length ? `Link aktif: ${lk.join(', ')} memakai sinyal suara dari ${CHN[curCh]}.` : '', srcs.length ? `Link aktif: ${CHN[curCh]} memakai sinyal suara dari ${srcs.join(', ')}.` : ''].filter(Boolean).join(' ') : (lk.length ? `Link aktif: perubahan di ${CHN[curCh]} ikut menggerakkan ${lk.join(', ')}.` : '');
+  $('#chHead').replaceChildren(msg ? el('div', { class: 'hint', style: 'margin:-4px 0 12px;color:var(--warn)' }, msg) : '');
+}
+function renderChanPage() {
+  const body = $('#chBody'), ch = curCh, p = curPage[+isOut(ch)]; drawers.length = 0; bindings.clear(); const n = [];
+  if (!isOut(ch)) {
+    if (p === 'gain') n.push(card('Gain input', ctlSlider(ch, 'gain', 'Gain', lin(-40, 20, 0.5, x => fmtDb(x)), 0), ctlToggle(ch, 'mute', 'Mute', 'MUTE', 'ON', 'mute'), ctlToggle(ch, 'pol', 'Polaritas', 'INVERT', 'NORMAL')));
+    if (p === 'eq') n.push(eqSection(ch));
+    if (p === 'gate') n.push(gateCard(ch));
+    if (p === 'delay') n.push(card('Delay input', ctlToggle(ch, 'dlyOn', 'Delay'), ctlSlider(ch, 'delay', 'Waktu', delayScale, 0), delayInfo(ch)));
+    if (p === 'comp') n.push(el('div', { class: 'two' }, card('Kompresor', ctlToggle(ch, 'cOn', 'Comp'), ctlSlider(ch, 'cThr', 'Threshold', lin(-60, 0, 0.5, x => fmtDb(x)), -20), ctlSlider(ch, 'cRat', 'Ratio', lin(1, 20, 0.5, x => x.toFixed(1) + ' : 1'), 3),
+      ctlSlider(ch, 'cAtt', 'Attack', lin(0.5, 200, 0.5, x => x + ' ms'), 10), ctlSlider(ch, 'cRel', 'Release', lin(10, 2000, 10, x => x + ' ms'), 150), ctlSlider(ch, 'cMk', 'Makeup', lin(0, 24, 0.5, x => fmtDb(x)), 0)), card('Kurva (perkiraan)', compGraph(ch))));
+  } else {
+    if (p === 'gain') n.push(el('div', { class: 'two' }, card('Source', sourceSeg(ch), el('div', { class: 'hint' }, 'A = input A saja · B = input B saja · A+B = campur −6 dB. Detail di halaman Route.')),
+      card('Gain output', ctlSlider(ch, 'gain', 'Gain', lin(-60, 12, 0.5, x => fmtDb(x)), 0), ctlToggle(ch, 'mute', 'Mute', 'MUTE', 'ON', 'mute'), ctlToggle(ch, 'pol', 'Polaritas', 'INVERT', 'NORMAL'))));
+    if (p === 'xo') n.push(card('Crossover', xoGraph(ch), el('div', { style: 'height:10px' }), el('div', { class: 'two' }, el('div', null, ctlSelect(ch, 'hpT', 'HPF tipe', XO_NAMES), ctlSlider(ch, 'hpF', 'HPF freq', freqScale, 80)), el('div', null, ctlSelect(ch, 'lpT', 'LPF tipe', XO_NAMES), ctlSlider(ch, 'lpF', 'LPF freq', freqScale, 2000)))));
+    if (p === 'eq') n.push(eqSection(ch));
+    if (p === 'delay') n.push(card('Delay', ctlToggle(ch, 'dlyOn', 'Delay'), ctlSlider(ch, 'delay', 'Waktu', delayScale, 0), delayInfo(ch)));
+    if (p === 'lim') n.push(card('Limiter', ctlToggle(ch, 'lOn', 'Limiter'), ctlSlider(ch, 'lThr', 'Threshold', lin(-30, 0, 0.5, x => fmtDb(x)), -1), ctlSlider(ch, 'lAtt', 'Attack', lin(0, 10, 0.5, x => x + ' ms'), 0),
+      ctlSlider(ch, 'lHold', 'Hold', lin(0, 200, 5, x => x + ' ms'), 0), ctlSlider(ch, 'lRel', 'Release', lin(5, 1000, 5, x => x + ' ms'), 100), ctlSlider(ch, 'lDrv', 'Drive', lin(0, 12, 0.5, x => fmtDb(x)), 0),
+      el('div', { class: 'row' }, el('span', { class: 'dim' }, 'Gain reduction:'), el('b', { id: 'grLive', style: 'color:var(--warn)' }, '0 dB'))));
+    if (p === 'gate') n.push(gateCard(ch));
+    if (p === 'route') n.push(card('Mix dari input', ctlSlider(ch, 'mixA', 'Level A', lin(-60, 6, 0.5, x => x <= -60 ? 'OFF' : fmtDb(x)), -60), ctlSlider(ch, 'mixB', 'Level B', lin(-60, 6, 0.5, x => x <= -60 ? 'OFF' : fmtDb(x)), -60), el('div', { class: 'hint' }, '−60 = tidak ikut. Klik dua kali slider untuk reset.')));
+  }
+  body.replaceChildren(...n); scheduleDraw();
+}
+const gateCard = ch => card('Noise gate', ctlToggle(ch, 'gOn', 'Gate'), ctlSlider(ch, 'gThr', 'Threshold', lin(-80, 0, 1, x => fmtDb(x, 0)), -60), ctlSlider(ch, 'gAtt', 'Attack', lin(0.5, 100, 0.5, x => x + ' ms'), 2), ctlSlider(ch, 'gRel', 'Release', lin(5, 2000, 5, x => x + ' ms'), 100));
+function sourceSeg(ch) {
+  const btns = ['A', 'B', 'A+B'].map((n, i) => el('button', { onclick: () => { const m = [[0, -60], [-60, 0], [-6, -6]][i]; setParam(ch, 'mixA', m[0]); setParam(ch, 'mixB', m[1]); upd(); } }, n));
+  const upd = () => { const a = v(ch, 'mixA', 0), b = v(ch, 'mixB', -60);
+    const s = Math.abs(a) < .01 && b <= -60 ? 0 : a <= -60 && Math.abs(b) < .01 ? 1 : Math.abs(a + 6) < .01 && Math.abs(b + 6) < .01 ? 2 : 3; btns.forEach((x, i) => x.classList.toggle('on', i === s)); };
+  bind(ch, 'mixA', upd); bind(ch, 'mixB', upd); upd(); return el('div', { class: 'seg' }, btns);
+}
+function delayInfo(ch) { const o = el('div', { class: 'hint' }); const upd = () => { const s = v(ch, 'delay'); o.textContent = `${s} sampel · ≈ ${(s / FS * 343).toFixed(2)} m jarak suara (343 m/s)`; }; bind(ch, 'delay', upd); upd(); return o; }
+function eqSection(ch) {
+  const wrap = el('div'); wrap.append(card('Respons EQ', ctlToggle(ch, 'eqOn', 'EQ'), eqGraph(ch), el('div', { class: 'hint' }, 'Tarik titik pada grafik untuk mengubah frekuensi & gain. Pilih band di bawah untuk detail.')), el('div', { class: 'card', id: 'eqBandCard' }));
+  setTimeout(renderEqBand, 0); return wrap;
+}
+function renderEqBand() {
+  const cardEl = $('#eqBandCard'); if (!cardEl) return; const ch = curCh;
+  const chips = el('div', { class: 'chips' }, Array.from({ length: 10 }, (_, i) => el('button', { class: i === curBand ? 'on' : '', onclick: () => { curBand = i; renderEqBand(); scheduleDraw(); } }, String(i + 1))));
+  for (const k of ['t', 'f', 'g', 'q']) bindings.delete(`${ch}:e${curBand}${k}`);
+  cardEl.replaceChildren(el('h3', null, 'Band ' + (curBand + 1)), chips, ctlSelect(ch, `e${curBand}t`, 'Tipe', EQ_NAMES), ctlSlider(ch, `e${curBand}f`, 'Frekuensi', freqScale, EQ_F0[curBand]),
+    ctlSlider(ch, `e${curBand}g`, 'Gain', lin(-20, 20, 0.5, x => fmtDb(x)), 0), ctlSlider(ch, `e${curBand}q`, 'Q', lin(0.1, 20, 0.1, x => x.toFixed(1)), 1.4),
+    el('div', { class: 'row' }, el('button', { onclick: () => { setParam(ch, `e${curBand}g`, 0); renderEqBand(); } }, 'Reset gain band'), el('button', { onclick: () => { for (let b = 0; b < 10; b++) setParam(ch, `e${b}g`, 0); renderEqBand(); } }, 'Flat semua band')));
+}
+function refreshEqBand() { for (const k of ['f', 'g']) (bindings.get(`${curCh}:e${curBand}${k}`) || []).forEach(fn => fn(v(curCh, `e${curBand}${k}`))); }
+
+/* ====================== MIXER (strip console) ====================== */
+const stripRefs = [];
+function makeFader(ch) {
+  const lo = isOut(ch) ? -60 : -40, hi = isOut(ch) ? 12 : 20;
+  const rail = el('div', { class: 'rail' }), zero = el('div', { class: 'fz' }), knob = el('div', { class: 'fk' });
+  const root = el('div', { class: 'fader', tabindex: 0, role: 'slider', 'aria-label': 'Gain ' + CHN[ch], 'aria-valuemin': lo, 'aria-valuemax': hi }, rail, zero, knob);
+  const frac = g => (hi - g) / (hi - lo), PAD = 12;
+  const place = g => { const H = root.clientHeight || 214, y = PAD + frac(g) * (H - 2 * PAD); knob.style.top = y + 'px'; zero.style.top = (PAD + frac(0) * (H - 2 * PAD)) + 'px'; root.setAttribute('aria-valuenow', g); };
+  const fromY = ev => { const r = root.getBoundingClientRect(), t = clamp((ev.clientY - r.top - PAD) / (r.height - 2 * PAD), 0, 1); return Math.round((hi - t * (hi - lo)) * 2) / 2; };
+  let dragging = false;
+  root.addEventListener('pointerdown', ev => { dragging = true; root.setPointerCapture(ev.pointerId); root.focus(); setParam(ch, 'gain', fromY(ev)); });
+  root.addEventListener('pointermove', ev => { if (dragging) setParam(ch, 'gain', fromY(ev)); });
+  const end = () => { dragging = false; }; root.addEventListener('pointerup', end); root.addEventListener('pointercancel', end);
+  root.addEventListener('dblclick', () => setParam(ch, 'gain', 0));
+  root.addEventListener('keydown', ev => { const d = ev.key === 'ArrowUp' || ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowDown' || ev.key === 'ArrowLeft' ? -1 : 0; if (!d) return; ev.preventDefault(); setParam(ch, 'gain', clamp(v(ch, 'gain') + d * (ev.shiftKey ? 3 : 0.5), lo, hi)); });
+  return { el: root, set: place };
+}
+function renderMixer() {
+  const root = $('#pg-mix'); stripRefs.length = 0;
+  const top = el('div', { class: 'toolbar' }, el('button', { class: 'bad', onclick: () => cmd('A,muteall') }, 'Mute / unmute semua output'), el('span', { class: 'grow' }),
+    meta.tone[0] ? el('span', { class: 'tag warn' }, '● Tes tone aktif · ' + TONE_NAMES[meta.tone[0]]) : null);
+  const con = el('div', { class: 'console' });
+  for (let ch = 0; ch < 6; ch++) {
+    const fill = el('i'), hd = el('b'), out = el('output'), grEl = el('div', { class: 'gr' }), fader = makeFader(ch);
+    const mute = el('button', { class: 'mute', onclick: () => setParam(ch, 'mute', v(ch, 'mute') ? 0 : 1), 'aria-label': 'Mute ' + CHN[ch] }, 'M');
+    const pol = el('button', { onclick: () => setParam(ch, 'pol', v(ch, 'pol') ? 0 : 1), title: 'Polaritas', 'aria-label': 'Polaritas ' + CHN[ch] }, 'Ø');
+    const scale = el('div', { class: 'scale' }, (isOut(ch) ? ['+12', '0', '−12', '−24', '−48', '−60'] : ['+20', '0', '−10', '−20', '−30', '−40']).map(t => el('span', null, t)));
+    const strip = el('div', { class: 'cs ' + (isOut(ch) ? 'out' : 'in') },
+      el('div', { class: 'nm' }, CHN[ch], el('small', null, tagOf(ch) || '\u00a0')),
+      el('div', { class: 'faderwrap' }, el('div', { class: 'vm' }, fill, hd), fader.el, scale), out, grEl,
+      el('div', { class: 'btn2' }, mute, pol), el('button', { class: 'edit', onclick: () => { curCh = ch; setTab('ch'); } }, 'Edit ›'));
+    con.append(strip); stripRefs[ch] = { strip, fill, hd, out, grEl, mute, pol, fader };
+  }
+  root.replaceChildren(top, con, el('div', { class: 'hint' }, 'Tarik fader atau gunakan tombol panah (Shift = langkah besar). Klik dua kali fader untuk reset ke 0 dB. Meter −60…0 dBFS dengan peak-hold.'));
+  requestAnimationFrame(updateStripVals);
+}
+function updateStripVals() {
+  for (let ch = 0; ch < 6; ch++) {
+    const r = stripRefs[ch]; if (!r) continue; const g = v(ch, 'gain', 0);
+    r.fader.set(g); r.out.textContent = fmtDb(g);
+    r.mute.classList.toggle('on', !!v(ch, 'mute')); r.pol.classList.toggle('on', !!v(ch, 'pol')); r.strip.classList.toggle('muted', !!v(ch, 'mute'));
+  }
+}
+const pct = d => clamp((d + 60) / 60, 0, 1) * 100;
+function animate(now) {
+  for (let i = 0; i < 6; i++) {
+    if (lev[i] >= hold[i]) { hold[i] = lev[i]; holdT[i] = now; } else if (now - holdT[i] > 1200) hold[i] -= 0.8;
+    const r = stripRefs[i];
+    if (r && curTab === 'mix') { r.fill.style.clipPath = `inset(${100 - pct(lev[i])}% 0 0 0)`; r.hd.style.bottom = `calc(${pct(hold[i])}% - 1px)`;
+      if (i >= 2) r.grEl.textContent = gr[i - 2] >= 1 ? `LMT −${gr[i - 2]} dB` : '\u00a0'; }
+  }
+  const g = $('#grLive'); if (g && isOut(curCh)) g.textContent = gr[curCh - 2] + ' dB';
+  requestAnimationFrame(animate);
+}
+
+/* ====================== PRESET ====================== */
+function renderPresets() {
+  const root = $('#pg-pre');
+  root.replaceChildren(el('div', { class: 'hint', style: 'margin:0 0 14px' }, 'Simpan setelan saat ini ke slot, atau muat kembali. Preset tersimpan di flash ESP32.'),
+    el('div', { class: 'pre' }, meta.presets.map((p, i) => el('div', { class: 'pslot' },
+      el('div', { class: 't' }, el('span', null, `${i + 1}. ${p.name || 'Preset'}`), el('span', { class: 'tag' + (p.used ? ' ok' : '') }, p.used ? 'terisi' : 'kosong')),
+      el('div', { class: 'row' },
+        el('button', { disabled: !p.used, onclick: () => { if (confirm(`Muat preset ${i + 1}? Setelan sekarang akan diganti.`)) { cmd('A,load,' + i); setTimeout(() => cmd('GET'), 300); } } }, 'Muat'),
+        el('button', { class: 'pri', onclick: () => { if (!p.used || confirm(`Timpa preset ${i + 1}?`)) { cmd('A,save,' + i); toast('Preset ' + (i + 1) + ' disimpan', 'ok'); } } }, 'Simpan'),
+        el('button', { onclick: () => { const n = prompt('Nama preset (maks 10 huruf/angka):', p.name); if (n !== null) cmd(`PN,${i},${n.replace(/,/g, ' ')}`); } }, 'Nama'))))));
+}
+
+/* ====================== EDITOR GAMBAR TFT (boot / standby) ====================== */
+const IMG_W = 160, IMG_H = 128, BLK = 96;
+function quantize565(id, dither) {
+  const w = IMG_W, h = IMG_H, d = id.data, out = new Uint16Array(w * h), er = new Float32Array(w * h * 3), q = [0, 0, 0];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    for (let c = 0; c < 3; c++) {
+      const lv = c === 1 ? 63 : 31, val = clamp(d[i * 4 + c] + er[i * 3 + c], 0, 255), qi = Math.round(val / 255 * lv), qv = qi / lv * 255, e = val - qv;
+      q[c] = qi; d[i * 4 + c] = Math.round(qv);
+      if (dither) {
+        if (x + 1 < w) er[(i + 1) * 3 + c] += e * 7 / 16;
+        if (y + 1 < h) { if (x > 0) er[(i + w - 1) * 3 + c] += e * 3 / 16; er[(i + w) * 3 + c] += e * 5 / 16; if (x + 1 < w) er[(i + w + 1) * 3 + c] += e / 16; }
+      }
+    }
+    out[i] = (q[0] << 11) | (q[1] << 5) | q[2];
+  }
+  return out;
+}
+const up_wait = (cond, ms) => new Promise((res, rej) => { const t0 = performance.now(); (function chk() { if (up.err) return rej(new Error(up.err)); if (cond()) return res(); if (performance.now() - t0 > ms) return rej(new Error('timeout')); setTimeout(chk, 12); })(); });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const IMG_ERR = { nofs: 'Partisi LittleFS/SPIFFS tidak ada di ESP32. Pilih Partition Scheme yang punya SPIFFS (mis. "Huge APP (3MB No OTA/1MB SPIFFS)") lalu upload ulang.', open: 'Alat gagal membuat file gambar di flash (LittleFS). Cek Serial Monitor: ada baris “IMG: GAGAL (open)”.', crc: 'Data rusak saat transfer (checksum beda). Coba kirim ulang.', order: 'Urutan data kacau. Coba kirim ulang.', b64: 'Data tidak valid. Coba kirim ulang.', write: 'Alat gagal menulis ke flash (penuh / partisi terlalu kecil). Lihat “Flash gambar” di Diagnostik koneksi.', state: 'Alat tidak dalam mode unggah (kemungkinan alat restart/koneksi putus saat transfer). Lihat “Reset terakhir” di Diagnostik koneksi.', disc: 'Koneksi Bluetooth putus saat transfer (alat mungkin restart). Lihat “Reset terakhir” di Diagnostik koneksi, lalu coba lagi.', mem: 'RAM alat tidak cukup untuk penyangga unggahan. Tekan “Tes ping” untuk melihat Memori alat.',
+  timeout_begin: 'Alat tidak membalas perintah mulai-unggah. Kemungkinan balasan (notifikasi) dari alat tidak sampai ke web. Buka Sistem › Diagnostik koneksi lalu tekan “Tes ping”.',
+  timeout_data: 'Transfer terhenti: alat berhenti mengirim konfirmasi blok data. Dekatkan HP ke alat, tutup aplikasi Bluetooth lain, lalu coba lagi.',
+  timeout_end: 'Data sudah terkirim tetapi alat tidak mengonfirmasi penyimpanan. Cek status gambar di kartu ini atau kirim ulang.' };
+let uploading = false;
+async function uploadImage(which, bytes, onProg) {
+  if (!(connected || demo)) throw new Error('Belum terhubung ke alat.');
+  if (uploading) throw new Error('Masih ada unggahan berjalan.');
+  uploading = true; up.err = null; up.done = false; up.acked = 0; up.dup = 0; diag.ie = ''; upGen++;
+  const N = bytes.length; let sent = 0, resends = 0, stalls = 0;
+  try {
+    sendRaw('MET,0'); if (!demo) await sleep(500); up.err = null;   // beri waktu notifikasi sisa upaya sebelumnya lewat, lalu bersihkan
+    // tulis berkonfirmasi (write with response) + paket besar: lebih lambat sedikit tapi tidak ada paket yang hilang diam-diam
+    if (!demo) { mtuVal = 0; sendRaw('MTU?'); try { await up_wait(() => mtuVal > 0, 1200); } catch (e) { up.err = null; } wchunk = mtuVal >= 64 ? Math.min(mtuVal - 3, 180) : 20; }
+    // 1) mulai (diulang bila tak dibalas)
+    let ok = false;
+    for (let t = 0; t < 3 && !ok; t++) { up.acked = -1; sendRaw('IMG,B,' + which, true); try { await up_wait(() => up.acked >= 0, 2500); ok = true; } catch (e) { if (e.message !== 'timeout') throw e; } }
+    if (!ok) throw new Error('timeout_begin');
+    // 2) kirim blok dengan jendela kecil. Ack ganda = alat melihat blok tak berurutan -> ulang segera dari posisi terkonfirmasi.
+    let lastAck = 0, lastProg = performance.now(), lastResend = 0;
+    let sum = 0; for (const b of bytes) sum = (sum + b) >>> 0;
+    const resendFrom = () => { upGen++; sent = Math.max(up.acked, 0); up.dup = 0; lastResend = performance.now(); resends++; };
+    while (up.acked < N) {
+      if (up.err) throw new Error(up.err);
+      if (up.dup >= 1 && performance.now() - lastResend > 400) resendFrom();
+      if (sent < N && sent - up.acked <= BLK * 6) {
+        const blk = bytes.subarray(sent, Math.min(N, sent + BLK));
+        sendRaw(`IMG,D,${sent},${btoa(String.fromCharCode.apply(null, blk))}`, true, upGen); sent += blk.length;
+      } else await sleep(8);
+      if (up.acked > lastAck) { lastAck = up.acked; lastProg = performance.now(); stalls = 0; up.dup = 0; onProg(up.acked / N * 0.97); }
+      else if (performance.now() - lastProg > 3000) { if (++stalls > 6) throw new Error('timeout_data'); resendFrom(); lastProg = performance.now(); }
+    }
+    // 3) selesai (alat menulis sisa data ke flash dulu; beri waktu)
+    ok = false;
+    for (let t = 0; t < 3 && !ok; t++) { sendRaw(`IMG,E,${which},${sum}`, true); try { await up_wait(() => up.done, 6000); ok = true; } catch (e) { if (e.message !== 'timeout') throw e; } }
+    if (!ok) throw new Error('timeout_end');
+    onProg(1);
+  } finally {
+    diag.upinfo = `ack ${Math.max(up.acked, 0)}/${N} B · kirim ${sent} · ulang ${resends} · tulis ${wchunk} B`;
+    uploading = false; if (connected || demo) sendRaw('MET,' + (document.hidden ? 0 : 1)); wchunk = 20;
+  }
+}
+
+function makeImgEditor(which) {
+  const name = which === 0 ? 'Layar boot' : 'Layar standby';
+  const stt = { img: null, fit: 'cover', zoom: 1, ox: 0, oy: 0, dither: true, bg: '#000000', rgb: null };
+  const work = document.createElement('canvas'); work.width = IMG_W; work.height = IMG_H; const wg = work.getContext('2d', { willReadFrequently: true });
+  const prev = el('canvas', { class: 'imgprev nopan', width: IMG_W, height: IMG_H, title: 'Seret untuk menggeser, atau jatuhkan foto di sini' }); const pg = prev.getContext('2d');
+  const file = el('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+  const badgeEl = el('span', { class: 'tag' }), prog = el('i'), progBox = el('div', { class: 'prog', style: 'display:none' }, prog), msg = el('div', { class: 'hint' });
+  const zoomOut = el('output', { class: 'dim' }, '100%'), zoom = el('input', { type: 'range', min: 100, max: 400, step: 5, value: 100, 'aria-label': 'Zoom' });
+  const fit = el('select', null, [['cover', 'Isi penuh (potong)'], ['contain', 'Muat (ada bingkai)'], ['stretch', 'Regangkan']].map(([k, n]) => el('option', { value: k }, n)));
+  const bg = el('input', { type: 'color', value: '#000000', style: 'width:44px;height:34px;padding:2px;background:var(--bg2);border:1px solid var(--line);border-radius:8px', title: 'Warna latar (untuk mode Muat)' });
+  const dth = el('input', { type: 'checkbox', checked: 'checked' });
+  const send = el('button', { class: 'pri', disabled: true }, 'Kirim ke alat');
+  const del = el('button', { class: 'bad' }, 'Hapus dari alat'), pv = el('button', null, 'Pratinjau di alat');
+
+  function render() {
+    wg.fillStyle = stt.bg; wg.fillRect(0, 0, IMG_W, IMG_H);
+    if (stt.img) {
+      const iw = stt.img.naturalWidth || stt.img.width, ih = stt.img.naturalHeight || stt.img.height; let w, h;
+      if (stt.fit === 'stretch') { w = IMG_W; h = IMG_H; } else { const s = (stt.fit === 'cover' ? Math.max(IMG_W / iw, IMG_H / ih) : Math.min(IMG_W / iw, IMG_H / ih)) * stt.zoom; w = iw * s; h = ih * s; }
+      const pan = stt.fit !== 'stretch'; const x = (IMG_W - w) / 2 + (pan ? stt.ox : 0), y = (IMG_H - h) / 2 + (pan ? stt.oy : 0);
+      wg.imageSmoothingQuality = 'high'; wg.drawImage(stt.img, x, y, w, h);
+    }
+    const id = wg.getImageData(0, 0, IMG_W, IMG_H); stt.rgb = quantize565(id, stt.dither); pg.putImageData(id, 0, 0);
+    if (!stt.img) { pg.fillStyle = '#5d6e82'; pg.font = '9px system-ui'; pg.textAlign = 'center'; pg.fillText('Pilih / jatuhkan foto di sini', 80, 62); pg.fillText('atau pakai logo Plonco', 80, 75); pg.textAlign = 'left'; }
+    prev.classList.toggle('nopan', !stt.img || stt.fit === 'stretch'); send.disabled = !stt.img;
+  }
+  function setImage(img) { stt.img = img; stt.ox = stt.oy = 0; stt.zoom = 1; zoom.value = 100; zoomOut.textContent = '100%'; msg.textContent = ''; render(); }
+  function loadFile(f) {
+    if (!f || !f.type.startsWith('image/')) { toast('Pilih file gambar (JPG/PNG/WebP).', 'err'); return; }
+    const url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => { setImage(im); URL.revokeObjectURL(url); }; im.onerror = () => toast('Gambar tidak bisa dibaca.', 'err'); im.src = url;
+  }
+  function logo() { const im = new Image(); im.onload = () => { stt.fit = 'stretch'; fit.value = 'stretch'; setImage(im); }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tftLogoSvg()); }
+  file.addEventListener('change', () => { loadFile(file.files[0]); file.value = ''; });
+  fit.addEventListener('change', () => { stt.fit = fit.value; stt.ox = stt.oy = 0; render(); });
+  bg.addEventListener('input', () => { stt.bg = bg.value; render(); });
+  dth.addEventListener('change', () => { stt.dither = dth.checked; render(); });
+  zoom.addEventListener('input', () => { stt.zoom = zoom.value / 100; zoomOut.textContent = zoom.value + '%'; render(); });
+  let drag = null;
+  prev.addEventListener('pointerdown', ev => { if (!stt.img || stt.fit === 'stretch') return; drag = { x: ev.clientX, y: ev.clientY, ox: stt.ox, oy: stt.oy }; prev.setPointerCapture(ev.pointerId); });
+  prev.addEventListener('pointermove', ev => { if (!drag) return; const k = IMG_W / prev.getBoundingClientRect().width; stt.ox = drag.ox + (ev.clientX - drag.x) * k; stt.oy = drag.oy + (ev.clientY - drag.y) * k; render(); });
+  const endDrag = () => { drag = null; }; prev.addEventListener('pointerup', endDrag); prev.addEventListener('pointercancel', endDrag);
+  ['dragover', 'dragenter'].forEach(t => prev.addEventListener(t, e => { e.preventDefault(); prev.classList.add('drop'); }));
+  ['dragleave', 'drop'].forEach(t => prev.addEventListener(t, e => { e.preventDefault(); prev.classList.remove('drop'); if (t === 'drop') loadFile(e.dataTransfer.files[0]); }));
+  send.addEventListener('click', async () => {
+    if (!stt.rgb) return; const bytes = new Uint8Array(IMG_W * IMG_H * 2); stt.rgb.forEach((c, i) => { bytes[2 * i] = c & 255; bytes[2 * i + 1] = c >> 8; });
+    send.disabled = true; progBox.style.display = 'block'; prog.style.width = '0'; msg.textContent = 'Mengirim…'; msg.className = 'hint';
+    try { await uploadImage(which, bytes, p => { prog.style.width = (p * 100).toFixed(0) + '%'; }); toast(name + ' berhasil dikirim', 'ok'); msg.textContent = 'Tersimpan di flash alat.'; if (demo) { meta.img[which] = 1; badge(); } }
+    catch (e) { const t = (IMG_ERR[e.message] || e.message) + (diag.ie ? `  [kode alat: ${diag.ie.trim()}]` : ''); toast(t, 'err'); msg.textContent = t; msg.className = 'hint danger'; }
+    finally { send.disabled = !stt.img; setTimeout(() => { progBox.style.display = 'none'; }, 1200); }
+  });
+  del.addEventListener('click', () => { if (confirm(`Hapus gambar ${name.toLowerCase()} dari alat dan kembali ke logo bawaan?`)) { cmd('IMG,X,' + which); if (demo) { meta.img[which] = 0; badge(); } toast('Gambar dihapus', 'ok'); } });
+  pv.addEventListener('click', () => { cmd('A,preview,' + (which === 0 ? 'boot' : 'stby')); toast(which === 0 ? 'Memutar ulang layar boot di alat' : 'Alat masuk standby — putar encoder untuk keluar'); });
+  function badge() {
+    const s = meta.img[which]; badgeEl.className = 'tag' + (s ? ' ok' : ''); badgeEl.textContent = s === null ? 'belum diketahui' : s ? 'gambar kustom aktif' : 'logo bawaan';
+    del.disabled = !s; pv.disabled = !(connected || demo);
+    if (!meta.fs && s !== null) { badgeEl.className = 'tag warn'; badgeEl.textContent = 'flash LittleFS tidak tersedia'; }
+  }
+  const node = el('div', { class: 'card' },
+    el('h3', null, name, el('span', { class: 'sp' }), badgeEl),
+    el('div', { class: 'imged' },
+      el('div', null, prev, progBox, msg),
+      el('div', null,
+        el('div', { class: 'row', style: 'margin-bottom:10px' }, el('button', { onclick: () => file.click() }, 'Pilih foto…'), el('button', { onclick: logo }, 'Pakai logo Plonco'), file),
+        el('div', { class: 'ctl' }, el('label', null, 'Penyesuaian'), fit, el('span')),
+        el('div', { class: 'ctl' }, el('label', null, 'Zoom'), zoom, zoomOut),
+        el('div', { class: 'ctl' }, el('label', null, 'Latar'), el('div', null, bg), el('span')),
+        el('label', { class: 'sw', style: 'margin:6px 0 14px' }, dth, 'Dithering (gradasi lebih halus di layar 16-bit)'),
+        el('div', { class: 'row' }, send, pv, del),
+        el('div', { class: 'hint' }, `Ukuran layar ${IMG_W}×${IMG_H} piksel. Foto dipotong/diskalakan otomatis; pratinjau di kiri sudah memakai warna 16-bit seperti di TFT. Geser pratinjau untuk mengatur posisi.`))));
+  render(); badge();
+  return { node, badge };
+}
+const imgEd = [makeImgEditor(0), makeImgEditor(1)];
+
+/* ====================== PENGATUR WAKTU ====================== */
+const HOME_STEPS = [0, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 300, 600];
+const STBY_STEPS = [0, 10, 15, 30, 60, 90, 120, 180, 300, 600, 900, 1800, 3600];
+const nearest = (arr, x) => arr.reduce((b, c, i) => Math.abs(c - x) < Math.abs(arr[b] - x) ? i : b, 0);
+const timerCard = (() => {
+  const u = meta.ui; let t = 0;
+  const bo = el('output'), ho = el('output'), so = el('output');
+  const bs = el('input', { type: 'range', min: 5, max: 150, step: 1, 'aria-label': 'Durasi boot' });
+  const hs = el('input', { type: 'range', min: 0, max: HOME_STEPS.length - 1, step: 1, 'aria-label': 'Kembali ke layar utama' });
+  const ss = el('input', { type: 'range', min: 0, max: STBY_STEPS.length - 1, step: 1, 'aria-label': 'Masuk standby' });
+  const fo = el('output'), fsl = el('input', { type: 'range', min: 0, max: 100, step: 1, 'aria-label': 'Fade-in suara' });
+  const pc = el('input', { type: 'checkbox' }), tc = el('input', { type: 'checkbox' });
+  const lab = () => { fo.textContent = +fsl.value === 0 ? 'Langsung' : (fsl.value / 10).toFixed(1) + ' dtk'; bo.textContent = (bs.value / 10).toFixed(1) + ' dtk'; ho.textContent = fmtDur(HOME_STEPS[hs.value]); so.textContent = fmtDur(STBY_STEPS[ss.value]); };
+  const push = () => { clearTimeout(t); t = setTimeout(() => cmd(`UI,${bs.value},${HOME_STEPS[hs.value]},${STBY_STEPS[ss.value]},${pc.checked ? 1 : 0},${tc.checked ? 1 : 0},${fsl.value}`), 350); };
+  [bs, hs, ss, fsl].forEach(x => x.addEventListener('input', () => { lab(); push(); })); [pc, tc].forEach(x => x.addEventListener('change', push));
+  function sync() { if (document.activeElement && [bs, hs, ss, fsl].includes(document.activeElement)) return; fsl.value = meta.ui.f; bs.value = meta.ui.b; hs.value = nearest(HOME_STEPS, meta.ui.h); ss.value = nearest(STBY_STEPS, meta.ui.s); pc.checked = !!meta.ui.p; tc.checked = !!meta.ui.t; lab(); }
+  const node = card('Pengatur waktu tampilan',
+    el('div', { class: 'ctl' }, el('label', null, 'Layar boot'), bs, bo),
+    el('div', { class: 'hint', style: 'margin:-4px 0 8px 116px' }, 'Lama layar pembuka tampil saat alat dinyalakan.'),
+    el('div', { class: 'ctl' }, el('label', null, 'Kembali ke utama'), hs, ho),
+    el('div', { class: 'hint', style: 'margin:-4px 0 8px 116px' }, 'Tanpa aktivitas selama waktu ini, menu kembali ke layar utama (setelan disimpan).'),
+    el('div', { class: 'ctl' }, el('label', null, 'Masuk standby'), ss, so),
+    el('div', { class: 'hint', style: 'margin:-4px 0 12px 116px' }, 'Tanpa aktivitas di layar utama selama waktu ini, layar standby tampil. “Tidak pernah” = standby dimatikan.'),
+    el('div', { class: 'ctl' }, el('label', null, 'Fade-in suara'), fsl, fo),
+    el('div', { class: 'hint', style: 'margin:-4px 0 12px 116px' }, 'Suara senyap selama boot, lalu naik perlahan setelah layar boot selesai. “Langsung” = tanpa fade-in.'),
+    el('div', { class: 'row', style: 'gap:22px' }, el('label', { class: 'sw' }, pc, 'Progress bar di gambar boot kustom'), el('label', { class: 'sw' }, tc, 'Teks “tekan encoder” di gambar standby kustom')));
+  sync(); return { node, sync };
+})();
+
+/* ====================== DIAGNOSTIK KONEKSI ====================== */
+const diagCard = (() => {
+  const mk = () => el('b', { style: 'color:var(--acc);font-variant-numeric:tabular-nums' }, '-');
+  const o = { st: mk(), mtu: mk(), ch: mk(), tx: mk(), rx: mk(), ln: mk(), last: mk(), rtt: mk(), fs: mk(), fw: mk(), rs: mk(), hp: mk(), ui: mk(), au: mk() };
+  const row = (l, e) => el('div', { class: 'row', style: 'justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)' }, el('span', { class: 'dim' }, l), e);
+  const btn = el('button', { class: 'pri', onclick: () => { if (!(connected || demo)) { toast('Belum terhubung.', 'err'); return; } diag.rtt = null; diag.pingT = performance.now(); sendRaw('PING'); o.rtt.textContent = 'menunggu…';
+    setTimeout(() => { if (diag.rtt === null) o.rtt.textContent = 'TIDAK ADA BALASAN — notifikasi dari alat tidak sampai'; }, 2500); } }, 'Tes ping');
+  const node = card('Diagnostik koneksi', row('Status', o.st), row('MTU (ukuran paket)', o.mtu), row('Ukuran tulis ke alat', o.ch), row('Terkirim ke alat', o.tx), row('Diterima dari alat', o.rx), row('Baris pesan diterima', o.ln), row('Pesan terakhir', o.last), row('Hasil ping', o.rtt), row('Flash gambar (terpakai / total)', o.fs), row('Versi firmware', o.fw), row('Reset terakhir', o.rs), row('Memori alat', o.hp), row('Unggahan terakhir', o.ui), row('Waktu audio (sejak ping lalu)', o.au),
+    el('div', { class: 'row', style: 'margin-top:12px' }, btn), el('div', { class: 'hint' }, 'Jika “Diterima dari alat” tetap 0 padahal terhubung, balasan alat tidak sampai ke web — kirim angka-angka ini ke pengembang.'));
+  const refresh = () => { if (!node.isConnected) return; o.st.textContent = demo ? 'demo' : connected ? 'terhubung' : 'terputus'; o.mtu.textContent = diag.mtu || '?'; o.ch.textContent = wchunk + ' byte'; o.tx.textContent = diag.tx + ' B'; o.rx.textContent = diag.rx + ' B'; o.ln.textContent = diag.lines; o.last.textContent = diag.last;
+    o.fs.textContent = diag.fsTotal ? `${(diag.fsUsed / 1024).toFixed(0)} / ${(diag.fsTotal / 1024).toFixed(0)} KB` : (meta.fs ? '?' : 'tidak ada');
+    o.au.textContent = diag.au; o.ui.textContent = diag.upinfo; o.hp.textContent = diag.hp; o.fw.textContent = diag.fw; o.rs.textContent = diag.rs;
+    if (diag.rtt !== null) o.rtt.textContent = diag.rtt + ' ms (OK)'; };
+  setInterval(refresh, 500); return { node };
+})();
+
+/* ====================== SISTEM ====================== */
+const sysSel = { cs: 2, cd: 3, ls: 0, ld: 1 };
+function renderSystem() {
+  const root = $('#pg-sys');
+  const chSel = key => { const s = el('select', { onchange: () => { sysSel[key] = +s.value; } }, CHN.map((n, i) => el('option', { value: i }, n))); s.value = sysSel[key]; return s; };
+  const sameType = (a, b) => (a < 2) === (b < 2);
+  const links = []; for (let s = 0; s < 6; s++) for (let d = 0; d < 6; d++) if (((meta.link[s] >> d) & 1) && !(((meta.link[d] >> s) & 1) && d < s)) links.push(el('span', { class: 'lnk' }, `${CHN[s]} ${((meta.link[d] >> s) & 1) ? '⇄' : '→'} ${CHN[d]}`, el('button', { onclick: () => cmd(`A,unlink,${s},${d}`) }, '✕')));
+  const names = el('div', { class: 'row' }, CHN.map((n, i) => { const inp = el('input', { type: 'text', maxlength: 4, size: 5, value: meta.names[i], placeholder: i >= 2 ? SPK[i - 2] : '—' });
+    inp.addEventListener('change', () => cmd(`NM,${i},${inp.value.replace(/,/g, ' ')}`)); return el('label', { class: 'dim' }, n + ' ', inp); }));
+  const tm = el('select', null, TONE_NAMES.map((n, i) => el('option', { value: i }, n))); tm.value = meta.tone[0];
+  const tf = el('input', { type: 'range', min: 0, max: 1000, step: 1, value: freqScale.from(meta.tone[1]) }), tg = el('input', { type: 'range', min: -60, max: 0, step: 1, value: meta.tone[2] });
+  const tfo = el('output', null, fmtHz(meta.tone[1])), tgo = el('output', null, meta.tone[2] + ' dBFS');
+  const sendTone = () => { const f = freqScale.to(+tf.value), g = +tg.value; tfo.textContent = fmtHz(f); tgo.textContent = g + ' dBFS'; cmd(`T,${tm.value},${f},${g}`); };
+  tm.addEventListener('change', () => { if (+tm.value && !confirm('Tes tone masuk ke SEMUA output. Pastikan gain power amp aman. Lanjut?')) tm.value = 0; sendTone(); });
+  tf.addEventListener('input', sendTone); tg.addEventListener('input', sendTone);
+  const blM = el('input', { type: 'range', min: 5, max: 100, step: 5, value: meta.bl[0], 'aria-label': 'Kecerahan layar' }), blS = el('input', { type: 'range', min: 0, max: 100, step: 5, value: meta.bl[1], 'aria-label': 'Kecerahan standby' });
+  const blMo = el('output', null, meta.bl[0] + '%'), blSo = el('output', null, meta.bl[1] + '%'); let blT = 0;
+  const blSend = () => { blMo.textContent = blM.value + '%'; blSo.textContent = blS.value + '%'; meta.bl = [+blM.value, +blS.value]; clearTimeout(blT); blT = setTimeout(() => cmd(`BL,${blM.value},${blS.value}`), 150); };
+  blM.addEventListener('input', blSend); blS.addEventListener('input', blSend);
+  const blCard = card('Kecerahan layar', el('div', { class: 'ctl' }, el('label', null, 'Kecerahan'), blM, blMo),
+    el('div', { class: 'ctl' }, el('label', null, 'Saat standby'), blS, blSo),
+    el('div', { class: 'hint' }, 'Kecerahan standby 0% = layar mati total saat standby. Untuk melihat hasilnya, tunggu alat masuk standby atau pakai pratinjau standby.'));
+  const th = el('select', { onchange: () => cmd('TH,' + th.value) }, THEMES.map((n, i) => el('option', { value: i }, n))); th.value = meta.theme;
+  root.replaceChildren(
+    el('div', { class: 'card', style: 'display:flex;gap:16px;align-items:center;flex-wrap:wrap' }, (() => { const s = document.createElement('span'); s.style.display = 'flex'; s.innerHTML = iconSvg('s', 54); return s; })(),
+      el('div', { class: 'grow' }, el('div', { style: 'font-weight:800;font-size:17px;letter-spacing:.5px' }, 'Tampilan layar alat'), el('div', { class: 'dim' }, 'Ganti gambar boot & standby, atur waktunya, atau pakai logo Plonco Elektronik.')),
+      el('label', { class: 'dim' }, 'Tema TFT ', th)),
+    imgEd[0].node, imgEd[1].node, blCard, timerCard.node,
+    el('div', { class: 'two' },
+      card('Tes tone', el('div', { class: 'ctl' }, el('label', null, 'Mode'), tm, el('span')), el('div', { class: 'ctl' }, el('label', null, 'Frekuensi'), tf, tfo), el('div', { class: 'ctl' }, el('label', null, 'Level'), tg, tgo),
+        el('div', { class: 'hint danger' }, 'Awas: nada tes dikirim ke semua output. Mulai dari level rendah.')),
+      card('Kontrol cepat', el('div', { class: 'row' }, el('button', { class: 'bad', onclick: () => cmd('A,muteall') }, 'Mute / unmute semua output')))),
+    el('div', { class: 'two' },
+      card('Salin setelan kanal', el('div', { class: 'row' }, chSel('cs'), '→', chSel('cd'), el('button', { onclick: () => {
+        const { cs, cd } = sysSel; if (cs === cd) return alert('Sumber dan tujuan sama.'); if (!sameType(cs, cd)) return alert('Hanya bisa antar-input atau antar-output.');
+        if (confirm(`Salin ${CHN[cs]} ke ${CHN[cd]}? Setelan ${CHN[cd]} akan ditimpa.`)) cmd(`A,copy,${cs},${cd}`); } }, 'Salin'))),
+      card('Link kanal', el('div', { class: 'row' }, chSel('ls'), '→', chSel('ld'), el('button', { onclick: () => {
+        const { ls, ld } = sysSel; if (ls === ld) return alert('Sumber dan tujuan sama.'); if (!sameType(ls, ld)) return alert('Hanya bisa antar-input atau antar-output.');
+        if (confirm(ls < 2 ? `Link ${CHN[ls]} → ${CHN[ld]}? ${CHN[ld]} akan memakai sinyal suara dari ${CHN[ls]} (gain/EQ/gate/comp tetap sendiri-sendiri).` : `Link ${CHN[ls]} → ${CHN[ld]}? Setelan ${CHN[ld]} akan mengikuti ${CHN[ls]}.`)) cmd(`A,link,${ls},${ld}`); } }, 'Link')),
+        el('div', { style: 'margin-top:8px' }, links.length ? links : el('span', { class: 'hint' }, 'Belum ada link.')),
+        el('div', { class: 'hint', style: 'margin-top:8px' }, 'Input: kanal tujuan memakai sinyal suara dari kanal sumber. Output: setelan tujuan mengikuti sumber.'))),
+    card('Nametag kanal (maks 4 huruf; kosong = bawaan)', names),
+    card('Sistem', el('label', { class: 'sw' }, (() => { const cb = el('input', { type: 'checkbox' }); cb.checked = !!meta.autoSave; cb.addEventListener('change', () => cmd('AS,' + (cb.checked ? 1 : 0))); return cb; })(), 'Simpan otomatis (OFF: perubahan tidak tersimpan kecuali disimpan ke preset)'),
+      el('div', { class: 'row', style: 'margin-top:10px' },
+      el('button', { class: 'bad', onclick: () => { if (confirm('Reset SEMUA setelan ke default?')) { cmd('A,default'); setTimeout(() => cmd('GET'), 300); } } }, 'Reset default'),
+      el('button', { class: 'bad', onclick: () => { if (confirm('Restart perangkat? Koneksi Bluetooth akan terputus.')) cmd('A,restart'); } }, 'Restart perangkat'))),
+    diagCard.node);
+  imgEd.forEach(e => e.badge());
+}
+
+/* ====================== TAB ====================== */
+const TABS = [['mix', 'Mixer'], ['ch', 'Kanal'], ['pre', 'Preset'], ['sys', 'Sistem']];
+function setTab(t) {
+  curTab = t;
+  $('#tabs').replaceChildren(...TABS.map(([k, n]) => el('button', { class: k === t ? 'sel' : '', onclick: () => setTab(k) }, n)));
+  for (const [k] of TABS) $('#pg-' + k).classList.toggle('sel', k === t);
+  drawers.length = 0; bindings.clear();
+  if (t === 'mix') renderMixer(); else if (t === 'ch') renderChannel(); else if (t === 'pre') renderPresets(); else renderSystem();
+  window.scrollTo(0, 0);
+}
+
+/* ====================== MODE DEMO ====================== */
+let demoTimer = 0, demoUp = { w: 0, off: 0 };
+function demoDefaults() {
+  for (let ch = 0; ch < 6; ch++) {
+    const s = ST[ch]; for (const k in s) delete s[k];
+    Object.assign(s, { gain: 0, mute: 0, pol: 0, eqOn: 0, gOn: ch < 2 ? 1 : 0, gThr: -60, gAtt: 2, gRel: 100 });
+    for (let b = 0; b < 10; b++) Object.assign(s, { ['e' + b + 't']: 1, ['e' + b + 'f']: EQ_F0[b], ['e' + b + 'g']: 0, ['e' + b + 'q']: 1.4 });
+    if (ch < 2) Object.assign(s, { cOn: 0, cThr: -20, cRat: 3, cAtt: 10, cRel: 150, cMk: 0, dlyOn: 0, delay: 0 });
+    else Object.assign(s, { dlyOn: 0, delay: 0, mixA: [0, -60, -6, -60][ch - 2], mixB: [-60, 0, -6, 0][ch - 2], hpT: 0, hpF: 80, lpT: 0, lpF: 2000, lOn: 1, lThr: -1, lAtt: 0, lHold: 0, lRel: 100, lDrv: 0 });
+  }
+  Object.assign(meta, { link: [0,0,0,0,0,0], tone: [0,1000,-30], theme: 0, names: ['','','','','',''], ui: { b: 18, h: 30, s: 120, p: 1, t: 1, f: 15 }, img: [0, 0], fs: 1,
+    presets: [{ used: 1, name: 'DEMO' }, { used: 0, name: '' }, { used: 0, name: '' }, { used: 0, name: '' }, { used: 0, name: '' }] });
+  timerCard.sync(); imgEd.forEach(e => e.badge());
+}
+function demoHandle(line) {
+  const f = line.split(','), c = f[0], echo = (ch, k) => setTimeout(() => parseLine(`P,${ch},${k},${ST[ch][k]}`), 30), later = (s, t = 12) => setTimeout(() => parseLine(s), t);
+  if (c === 'S') { const ch = +f[1]; ST[ch][f[2]] = parseFloat(f[3]); echo(ch, f[2]); }
+  else if (c === 'A' && f[1] === 'muteall') { const all = [2, 3, 4, 5].every(i => ST[i].mute); for (let i = 2; i < 6; i++) { ST[i].mute = all ? 0 : 1; echo(i, 'mute'); } }
+  else if (c === 'A' && f[1] === 'link') { meta.link[+f[2]] |= 1 << +f[3]; if (+f[2] < 2) meta.link[+f[3]] &= ~(1 << +f[2]); }
+  else if (c === 'A' && f[1] === 'unlink') { meta.link[+f[2]] &= ~(1 << +f[3]); meta.link[+f[3]] &= ~(1 << +f[2]); }
+  else if (c === 'A' && f[1] === 'save') meta.presets[+f[2]].used = 1;
+  else if (c === 'NM') meta.names[+f[1]] = f[2].toUpperCase().slice(0, 4);
+  else if (c === 'PN') meta.presets[+f[1]].name = f[2].toUpperCase().slice(0, 10);
+  else if (c === 'T') meta.tone = [+f[1], +f[2], +f[3]];
+  else if (c === 'TH') meta.theme = +f[1];
+  else if (c === 'AS') meta.autoSave = +f[1] ? 1 : 0;
+  else if (c === 'BL') meta.bl = [+f[1], +f[2]];
+  else if (c === 'UI') later(`UI,${f[1]},${f[2]},${f[3]},${f[4]},${f[5]},${f[6] !== undefined ? f[6] : 15}`);
+  else if (c === 'MTU?') later('MTU,247');
+  else if (c === 'PING') later('PONG,247');
+  else if (c === 'IMG') {
+    if (f[1] === 'B') { demoUp = { w: +f[2], off: 0 }; later('IA,0', 20); }
+    else if (f[1] === 'D') { demoUp.off += atob(f[3]).length; later('IA,' + demoUp.off, 6); }
+    else if (f[1] === 'E') later('IOK,' + demoUp.w, 20);
+    else if (f[1] === 'X') { meta.img[+f[2]] = 0; later(`IS,${meta.img[0]},${meta.img[1]},1`); }
+  }
+  metaChanged();
+}
+function startDemo() {
+  demo = true; demoDefaults(); setStatus('Mode demo · data simulasi', 'demo');
+  demoTimer = setInterval(() => {
+    const t = performance.now() / 1000;
+    for (let i = 0; i < 6; i++) { const base = -22 + 10 * Math.sin(t * (1.1 + i * .37)) + 6 * Math.sin(t * 7.3 + i); lev[i] = ST[i].mute ? -90 : Math.min(0, Math.round(base + (ST[i].gain || 0) * (i < 2 ? .5 : .8))); }
+    for (let o = 0; o < 4; o++) gr[o] = lev[2 + o] > -3 ? Math.round(2 + 3 * Math.random()) : 0;
+  }, 100);
+  setTab(curTab);
+}
+function stopDemo() { demo = false; clearInterval(demoTimer); lev.fill(-90); gr.fill(0); setStatus('Belum terhubung'); imgEd.forEach(e => e.badge()); }
+
+/* ====================== INIT ====================== */
+$('#bConn').addEventListener('click', () => { if (demo) stopDemo(); connected ? disconnectBle() : connectBle(); });
+$('#bSync').addEventListener('click', () => { if (demo) { demoDefaults(); setTab(curTab); } else sendRaw('GET'); });
+$('#bAll').addEventListener('click', () => connectBle(true));
+$('#bDemo').addEventListener('click', () => { demo ? stopDemo() : (connected && disconnectBle(), startDemo()); });
+document.addEventListener('visibilitychange', () => { if (connected && !uploading) sendRaw('MET,' + (document.hidden ? 0 : 1)); });
+window.addEventListener('resize', () => { scheduleDraw(); if (curTab === 'mix') updateStripVals(); });
+if (!navigator.bluetooth) {
+  const w = $('#warn'); w.style.display = 'block';
+  w.textContent = 'Browser ini tidak mendukung Web Bluetooth. Pakai Chrome atau Edge (Android, Windows, macOS, Linux) lewat HTTPS atau file lokal. Di iPhone/iPad Safari tidak bisa — pakai aplikasi browser “Bluefy”. Mode Demo tetap bisa dicoba.';
+  $('#bConn').disabled = true;
+}
+setTab('mix'); requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
